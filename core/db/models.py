@@ -10,17 +10,10 @@ intpk = Annotated[int, mapped_column(primary_key=True)]
 
 
 class Base(AsyncAttrs, DeclarativeBase):
-    repr_cols_num = 3
-    repr_cols = tuple()
-
+    
     def __repr__(self):
-        """Relationships не используются в repr(), т.к. могут вести к неожиданным подгрузкам"""
-        cols = []
-        for idx, col in enumerate(self.__table__.columns.keys()):
-            if col in self.repr_cols or idx < self.repr_cols_num:
-                cols.append(f"{col}={getattr(self, col)}")
-
-        return f"<{self.__class__.__name__} {', '.join(cols)}>"
+            columns = [f"{c.name}={getattr(self, c.name)!r}" for c in self.__table__.columns]
+            return f"<{self.__class__.__name__}({', '.join(columns)})>"
 
 
 class TransactionsType(enum.Enum):

@@ -2,7 +2,7 @@ import logging
 
 from aiogram import Bot, Dispatcher
 
-from core.handlers.basic import router
+from core.handlers.main_handlers import router
 from core.handlers.registration import router_register
 from core.settings import config
 from core.utils.commands import set_commands

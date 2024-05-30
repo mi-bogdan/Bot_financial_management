@@ -1,9 +1,10 @@
 from sqlalchemy import ScalarResult, insert, select
+from sqlalchemy.orm import joinedload
 
 from core.utils.data import category_list
 
 from .database import async_session, engine
-from .models import Base, Category, Transactions, User
+from .models import Base, Budgets, Category, Transactions, User
 
 
 class DataBase:
@@ -109,3 +110,45 @@ class AsyncQueryTransactions:
                 Transactions(amount=amount, category_id=category_id, user_id=user_id)
             )
             await session.commit()
+
+    @staticmethod
+    async def get_transactions(user_id):
+        async with async_session() as session:
+            query = await session.execute(select(Transactions).where(Budgets.user_id == user_id))
+            return query.scalar()
+
+
+class AsyncQueryBudgets:
+    """Запросы бюджета"""
+    @staticmethod
+    async def create_budget(limit: int, user_id: int, category_id: int, month, year):
+        """Создание бюджета для люмита"""
+        async with async_session() as session:
+            session.add(Budgets(limit=limit, user_id=user_id, category_id=category_id, month=month, year=year))
+            await session.commit()
+
+    @staticmethod
+    async def get_budgets(user_id, category_id, month, year):
+        async with async_session() as session:
+            query = await session.execute(select(Budgets).filter(Budgets.user_id == user_id, Budgets.category_id == category_id, Budgets.month == month, Budgets.year == year))
+            return query.scalar()
+
+    @staticmethod
+    async def universal_get_budgets(*args, **kwargs):
+        async with async_session() as session:
+            query = await session.execute(select(Budgets).filter(*args, **kwargs))
+            return query.scalars().all()
+
+
+class AsyncQueryJoin:
+    @staticmethod
+    async def get_user_budget_categories(user_id: int):
+        async with async_session() as session:
+            result = await session.execute(
+                select(Category)
+                .join(Budgets, Category.id == Budgets.category_id)
+                .where(Budgets.user_id == user_id)
+                .options(joinedload(Category))
+            )
+            categories = result.scalars().all()
+            return categories
