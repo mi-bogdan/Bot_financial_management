@@ -1,7 +1,7 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-from core.db.queries import AsyncQueryCategory
+
 
 
 management = ReplyKeyboardMarkup(
@@ -23,14 +23,29 @@ settings_reply_Keyboard = ReplyKeyboardMarkup(
             KeyboardButton(text="Установить люмит 🚫"),
             KeyboardButton(text="Изменить люмит 🚫")
         ],
+        [
+            KeyboardButton(text="Удалить люмит 🚫"),
+        ],
+    ],
+    resize_keyboard=True,
+)
+
+yes_no = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="Да"),
+            KeyboardButton(text="Нет")
+        ],
+
     ],
     resize_keyboard=True,
 )
 
 
-async def reply_keyboard_builder_category(transactions_type):
-    category = await AsyncQueryCategory.get_category_type(transactions_type)
+
+
+async def reply_keyboard_builder_category(categories):
     keyboard = ReplyKeyboardBuilder()
-    for cat in category:
+    for cat in categories:
         keyboard.add(KeyboardButton(text=cat.title))
-    return keyboard.adjust(2).as_markup()
+    return keyboard.adjust(2).as_markup(resize_keyboard=True)

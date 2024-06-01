@@ -1,4 +1,4 @@
-from sqlalchemy import ScalarResult, insert, select
+from sqlalchemy import ScalarResult, insert, select, update, delete, func
 from sqlalchemy.orm import joinedload
 
 from core.utils.data import category_list
@@ -139,16 +139,52 @@ class AsyncQueryBudgets:
             query = await session.execute(select(Budgets).filter(*args, **kwargs))
             return query.scalars().all()
 
+    @staticmethod
+    async def update_budget_limit(budget_id: int, new_limit: int) -> None:
+        """Обновление лимита бюджета"""
+        async with async_session() as session:
+            stmt = (
+                update(Budgets)
+                .where(Budgets.id == budget_id)
+                .values(limit=new_limit)
+            )
+
+            await session.execute(stmt)
+            await session.commit()
+
+    @staticmethod
+    async def delete_budget(budget_id: int) -> None:
+        """Обновление лимита бюджета"""
+        async with async_session() as session:
+            stmt = (
+                delete(Budgets)
+                .where(Budgets.id == budget_id)
+            )
+
+            await session.execute(stmt)
+            await session.commit()
+
 
 class AsyncQueryJoin:
     @staticmethod
-    async def get_user_budget_categories(user_id: int):
+    async def get_user_budget_categories(user_id: int, month: int, year: int):
         async with async_session() as session:
             result = await session.execute(
                 select(Category)
                 .join(Budgets, Category.id == Budgets.category_id)
-                .where(Budgets.user_id == user_id)
-                .options(joinedload(Category))
+                .where(Budgets.user_id == user_id, Budgets.month == month, Budgets.year == year)
             )
             categories = result.scalars().all()
             return categories
+
+    @staticmethod
+    async def get_statistics_by_date_and_category(start_date, end_date, user_id):
+        async with async_session() as session:
+            result = await session.execute(
+                select(Category.title, func.sum(Transactions.amount).label("total_amount"))
+                .join(Transactions, Category.id == Transactions.category_id)
+                .filter(Transactions.create_at.between(start_date, end_date), Transactions.user_id == user_id)
+                .group_by(Category.title)
+            )
+        statistics = result.all()
+        return statistics

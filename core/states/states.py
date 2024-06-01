@@ -10,3 +10,9 @@ class TransactionsForm(StatesGroup):
 class BudgetsForm(StatesGroup):
     category = State()
     limit = State()
+    type_limit = State()
+
+
+class ApprovalForm(StatesGroup):
+    category = State()
+    approval = State()
